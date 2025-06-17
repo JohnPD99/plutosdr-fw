@@ -62,6 +62,8 @@ You need to fork the following GitHub repositories:
 - [`maia-sdr/plutosdr-fw`](https://github.com/maia-sdr/plutosdr-fw) → `youruser/plutosdr-fw`
 - [`maia-sdr/maia-sdr`](https://github.com/maia-sdr/maia-sdr) → `youruser/maia-sdr`
 
+And then you shall clone plutosdr-fw into a folder called maia-fw inside the home directory.
+
 ---
 
 ##### 🔧 2. Replace the `maia-sdr` Submodule
