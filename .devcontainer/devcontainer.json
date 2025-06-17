@@ -1,0 +1,23 @@
+{
+  "name": "Maia SDR Dev",
+  "image": "ghcr.io/maia-sdr/maia-sdr-devel:latest",
+  "workspaceFolder": "/hdl",
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/hdl,type=bind",
+    "source=vivado2023_2,target=/opt/Xilinx,type=volume"
+  ],
+  "runArgs": [
+    "--net=host",
+    "--ulimit", "nofile=1024:1048576",
+    "-e", "DISPLAY=${env:DISPLAY}"
+  ],
+  "settings": {
+    "python.pythonPath": "/usr/bin/python3"
+  },
+  "remoteUser": "ubuntu",
+  "extensions": [
+    "ms-python.python",
+    "ms-vscode.cpptools"
+  ]
+}
+
