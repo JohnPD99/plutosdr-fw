@@ -30,32 +30,14 @@ There are also
 for any topics which are not issues (general questions, comments, etc.).
 
 ## Build instructions
-### Estevez Instructions
 
-Using the `ghcr.io/maia-sdr/maia-sdr-devel` Docker image from
-[maia-sdr-docker](https://github.com/maia-sdr/maia-sdr-docker) is recommended to build
-the firmware. To build the FPGA bitstream, Vivado 2023.2 is required.
-
-Once the environment variables and `PATH` have been set as indicated in the
-[Docker container README](https://github.com/maia-sdr/maia-sdr-docker#readme),
-the firmware can be built using
-```
-make
-```
-
-It is also possible to build using `docker compose` by running
-```
-DOCKER_USER="$(id -u):$(id -g)" TARGET=pluto docker compose run --rm build
-```
-
-### Custom Instructions
-#### 🛠️ Building Custom Firmware Using a Forked `maia-sdr` Monorepo
+### 🛠️ Building Custom Firmware Using a Forked `maia-sdr` Monorepo
 
 This guide explains how to use a **custom fork of the full `maia-sdr` monorepo** inside your own `plutosdr-fw` fork, and build firmware using Docker and Vivado.
 
 ---
 
-##### 📦 1. Fork Repositories
+#### 📦 1. Fork Repositories
 
 You need to fork the following GitHub repositories:
 
@@ -66,7 +48,7 @@ And then you shall clone plutosdr-fw into a folder called maia-fw inside the hom
 
 ---
 
-##### 🔧 2. Replace the `maia-sdr` Submodule
+#### 🔧 2. Replace the `maia-sdr` Submodule
 
 From the root of your cloned `plutosdr-fw` repo:
 
@@ -95,18 +77,18 @@ git push origin main
 
 ---
 
-##### 🐳 3. Set Up Docker & Install Vivado 2023.2
+#### 🐳 3. Set Up Docker & Install Vivado 2023.2
 
 > 💡 You must manually install Vivado due to licensing.
 
-###### a. Pull the development container and create volume:
+##### a. Pull the development container and create volume:
 
 ```bash
 sudo docker pull ghcr.io/maia-sdr/maia-sdr-devel:latest
 sudo docker volume create vivado2023_2
 ```
 
-###### b. Run Docker with GUI support:
+##### b. Run Docker with GUI support:
 
 ```bash
 xhost +local:  # for Vivado GUI support
@@ -121,7 +103,7 @@ docker run --rm --net host -e DISPLAY=$DISPLAY -e TERM \
 
 > 💡 You can mount a subdirectory of `$HOME` for safety (like `$HOME/maia-fw`) instead of the whole home directory.
 
-###### c. Install Vivado inside the container
+##### c. Install Vivado inside the container
 
 In a second terminal:
 
@@ -143,7 +125,7 @@ chmod +x FPGAs_AdaptiveSoCs_Unified_2023.2_1013_2256_Lin64.bin
 
 ---
 
-##### ⚙️ 4. Configure the Environment Inside the Container
+#### ⚙️ 4. Configure the Environment Inside the Container
 
 Set up the environment for building:
 
@@ -163,7 +145,7 @@ source ~/.bashrc
 
 ---
 
-##### 🧪 5. Build the Firmware
+#### 🧪 5. Build the Firmware
 
 Inside the Docker container:
 
@@ -179,7 +161,7 @@ This will:
 
 ---
 
-##### ⚡ Optional: Headless Build Using Docker Compose
+#### ⚡ Optional: Headless Build Using Docker Compose
 
 You can also build the firmware using the automated Docker Compose setup:
 
@@ -193,7 +175,7 @@ cd /hdl/plutosdr-fw
 
 ---
 
-##### 🔁 Updating Your Submodule
+#### 🔁 Updating Your Submodule
 
 If you push changes to your custom `maia-sdr` fork:
 
@@ -208,7 +190,7 @@ git push
 
 ---
 
-##### 🧠 Notes
+#### 🧠 Notes
 
 - GitHub will show the submodule (`maia-sdr`) as a single clickable entry, not its contents.
 - The actual files live in the linked repo.
@@ -216,7 +198,7 @@ git push
 
 ---
 
-##### ✅ Summary
+#### ✅ Summary
 
 | Task                             | Tool/Repo                  |
 |----------------------------------|-----------------------------|
@@ -225,49 +207,51 @@ git push
 | Build interactively with GUI     | Docker + Vivado             |
 | Build headlessly / CI-style      | `./build-docker.sh`         |
  
-## Pluto+
+## Flashing Instructions for Pluto
 
-**Disclaimer:** The Maia SDR project acknowledges that the name Pluto+ is
-  unfortunate, because this hardware device is unrelated to Analog Devices
-  ADALM products. However, this device is not known by any other name, so us
-  referring to it in another way would have been very confusing. Therefore,
-  within Maia SDR, the firmware build for the Pluto+ is refered to as Pluto+ or
-  `plutoplus`.
+### 1. Unlock QSPI Partition via SSH
 
-Here are some notes about the Pluto+ Maia SDR firmware.
+After building the project, plug in the Pluto and login via SSH. Run the following commands to unlock a locked QSPI partition, allowing the BOOT.BIN to be updated:
 
-The Pluto+ is largerly compatible with the ADALM-Pluto in terms of firmware. It
-uses a different Zynq 7010 package and FPGA pinout, but its pinout ensures that
-all the signals go to the same FPGA wirebonding pads (even though the BGA pins
-are called differently and placed differently in the package). This means that a
-regular ADALM-Pluto firmware mostly works on the Pluto+, though Ethernet and the
-SD card will not work because the ADALM-Pluto does not have this hardware. There
-is one pinout difference between the ADALM-Pluto and the Pluto+: the USB PHY
-reset (URST) on the ADALM-Pluto is connected to MIO52. On the Pluto+ it is
-usually connected to MIO46, because MIO52 is required for the Ethernet
-MDIO. However, the Pluto+ has a jumper to allow connecting the USB PHY reset to
-MIO52 instead when a firmware for the ADALM-Pluto (which does not support
-Ethernet) is used (see the [plutoplus
-README](https://github.com/plutoplus/plutoplus/tree/master#jumpers-and-pinouts)). When
-using the Pluto+ Maia SDR firmware, it is required to connect the jumper to
-MIO46.
-
-There is usually no point in using the ADALM-Pluto Maia SDR firmware in a
-Pluto+. Generally, the Pluto+ Maia SDR firmware should be used, as it supports
-Ethernet and the SD card.
-
-In order to distinguish it from the ADALM-Pluto firmware, the files for the
-Pluto+ Maia SDR firmware are called `plutoplus` instead of `plutosdr` or
-`pluto`. When using the USB storage firmware update method, the file that is
-copied to the USB storage device must be called `pluto.frm`. The file
-`plutoplus.frm` must be renamed to `pluto.frm`.
-
-The
-[`ipaddrmulti`](https://maia-sdr.org/installation/#configure-the-pluto-usb-ethernet)
-feature can conflict with the IP address assignment for the Pluto+ Ethernet. It
-is probably better to disable `ipaddrmulti` in the Pluto+.
-
-The Pluto+ firmware can be built with
 ```
-TARGET=plutoplus make
+fw_setenv dfu_ram 'sf probe && sf protect unlock 0 100000;echo Entering DFU RAM mode ... && run dfu_ram_info && dfu 0 ram 0'
+device_reboot ram
 ```
+
+### 2. Enter DFU Mode
+
+After executing the commands above, **power cycle** the Pluto and put it into **DFU mode**.
+
+**To enter DFU mode**:
+- Hold the pushbutton (next to the left USB port) while connecting Pluto to power.
+- If one LED is illuminated brightly, you are in DFU mode.
+
+### 3. Perform DFU Update from Host
+
+On your host machine:
+
+1. Navigate to `plutosdr-fw/build`
+2. Unzip the `plutosdr-fw` zip file
+3. Enter the unzipped directory in terminal
+
+Run the following commands (⚠️ **Do not unplug the Pluto during this process, or it will be bricked**):
+
+```
+sudo dfu-util -a firmware.dfu -D ./pluto.dfu
+sudo dfu-util -a boot.dfu -D ./boot.dfu
+sudo dfu-util -R -a uboot-env.dfu -D ./uboot-env.dfu
+```
+
+### 4. Apply Hardware Hack via SSH
+
+After the update, SSH into the Pluto again and run:
+
+```
+fw_setenv attr_name compatible
+fw_setenv attr_val ad9364
+fw_setenv mode 1r1t
+```
+
+### 5. Final Reboot
+
+Reboot the Pluto. The radiometer should now be up and running.
