@@ -206,6 +206,10 @@ git push
 | Wire it into firmware build      | `plutosdr-fw` via submodule |
 | Build interactively with GUI     | Docker + Vivado             |
 | Build headlessly / CI-style      | `./build-docker.sh`         |
+
+## Hardwaremod:
+On the back if the Pluto resistor R102 should be removed so that I2C can be used.
+An external clock can not be used anymore due to the hardware mod.
  
 ## Flashing Instructions for Pluto
 
@@ -255,3 +259,102 @@ fw_setenv mode 1r1t
 ### 5. Final Reboot
 
 Reboot the Pluto. The radiometer should now be up and running.
+
+## Test script for pincontrol and fasthop using gpio pins controlled from PS system
+
+```
+#!/bin/sh
+
+if [ `id -u` != "0" ]
+then
+   echo "This script must be run as root" 1>&2
+   exit 1
+fi
+
+phy_path = 'root'
+
+for i in $(find -L /sys/bus/iio/devices -maxdepth 2 -name name)
+do
+  dev_name=$(cat $i)
+  if [ "$dev_name" = "ad9361-phy" ]; then
+     phy_path=$(echo $i | sed 's:/name$::')
+     cd $phy_path
+     break
+  fi
+done
+
+if [ "$dev_name" != "ad9361-phy" ]; then
+ exit
+fi
+
+#Setup 8 Profiles 10MHz spaced
+for i in `seq 0 7`
+do
+  echo $((2400000000 + $i * 100000)) > out_altvoltage0_RX_LO_frequency
+  echo "Initializing PROFILE $i at $((2400000000 + $i * 100000)) MHz"
+  echo $i > out_altvoltage0_RX_LO_fastlock_store
+done
+
+#Enable Fastlock Mode
+iio_attr -D ad9361-phy adi,rx-fastlock-pincontrol-enable 1
+echo 0 > out_altvoltage0_RX_LO_fastlock_recall
+
+GPIO_BASE=906
+
+cd /sys/class/gpio
+
+if [ $GPIO_BASE -ge 0 ]
+then
+  GPIO_CTRL_IN1=`expr $GPIO_BASE + 63`
+  GPIO_CTRL_IN2=`expr $GPIO_BASE + 64`
+  GPIO_CTRL_IN3=`expr $GPIO_BASE + 65`
+  #Export the CTRL_IN GPIOs
+  echo $GPIO_CTRL_IN1 > export 2> /dev/null
+  echo $GPIO_CTRL_IN2 > export 2> /dev/null
+  echo $GPIO_CTRL_IN3 > export 2> /dev/null
+else
+  echo ERROR: Wrong board?
+  exit
+fi
+
+CTRL_IN1=gpio${GPIO_CTRL_IN1}/direction
+CTRL_IN2=gpio${GPIO_CTRL_IN2}/direction
+CTRL_IN3=gpio${GPIO_CTRL_IN3}/direction
+
+for i in `seq 0 7`
+do
+  echo Setting PROFILE $i
+  # BIT 0
+  if [ $(($i & 1)) -gt 0 ]
+  then
+    echo CTRL_IN1:1
+    echo high > $CTRL_IN1
+  else
+    echo CTRL_IN1:0
+    echo low > $CTRL_IN1
+  fi
+
+  # BIT 1
+  if [ $(($i & 2)) -gt 0 ]
+  then
+    echo CTRL_IN2:1
+    echo high > $CTRL_IN2
+  else
+    echo CTRL_IN2:0
+    echo low > $CTRL_IN2
+  fi
+
+  # BIT 2
+  if [ $(($i & 4)) -gt 0 ]
+  then
+    echo CTRL_IN3:1
+    echo high > $CTRL_IN3
+  else
+    echo CTRL_IN3:0
+    echo low > $CTRL_IN3
+  fi
+
+  sleep 1
+done
+
+```
