@@ -271,7 +271,7 @@ then
    exit 1
 fi
 
-phy_path = 'root'
+phy_path="root"
 
 for i in $(find -L /sys/bus/iio/devices -maxdepth 2 -name name)
 do
@@ -287,11 +287,11 @@ if [ "$dev_name" != "ad9361-phy" ]; then
  exit
 fi
 
-#Setup 8 Profiles 10MHz spaced
+#Setup 8 Profiles 100MHz spaced
 for i in `seq 0 7`
 do
-  echo $((2400000000 + $i * 100000)) > out_altvoltage0_RX_LO_frequency
-  echo "Initializing PROFILE $i at $((2400000000 + $i * 100000)) MHz"
+  echo $((1100000000 + $i * 100000000)) > out_altvoltage0_RX_LO_frequency
+  echo "Initializing PROFILE $i at $((1100000000 + $i * 100000000)) MHz"
   echo $i > out_altvoltage0_RX_LO_fastlock_store
 done
 
