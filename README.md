@@ -260,6 +260,15 @@ fw_setenv mode 1r1t
 
 Reboot the Pluto. The radiometer should now be up and running.
 
+### 6. chrome browser
+
+If you want data storage, you need to use chrome or edge. With chrome type in the following command in Linux:
+
+ google-chrome --user-data-dir=/tmp/chrome-dev \
+  --unsafely-treat-insecure-origin-as-secure="http://192.168.2.1:8000" \
+  http://192.168.2.1:8000
+
+
 ## Test script for pincontrol and fasthop using gpio pins controlled from PS system
 
 ```
